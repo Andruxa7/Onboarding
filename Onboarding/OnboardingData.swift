@@ -7,10 +7,12 @@
 
 import Foundation
 
+// MARK: - OnboardingData
 struct OnboardingData: Codable {
     let items: [QuestionItem]
 }
 
+// MARK: - QuestionItem
 struct QuestionItem: Codable {
     let id: Int
     let question: String
