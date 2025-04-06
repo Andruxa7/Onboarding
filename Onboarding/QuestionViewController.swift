@@ -31,7 +31,6 @@ class QuestionViewController: UIViewController {
     private lazy var questionLabel: UILabel = {
         let label = UILabel()
         label.text = question.questionText
-        //label.font = UIFont.systemFont(ofSize: 20)
         label.font = UIFont.boldSystemFont(ofSize: 20)
         label.textAlignment = .left
         label.numberOfLines = 0
