@@ -215,10 +215,6 @@ extension MainPageViewController {
             UIApplication.shared.open(url)
         }
     }
-    
-    @objc func startButtonTapped() {
-        print("🎉 Let's start the process of registering a premium subscription (Mock)")
-    }
 }
 
 // MARK: - UIPageViewControllerDelegate
@@ -246,5 +242,222 @@ extension MainPageViewController: PageNavigationDelegate {
         } else {
             print("🎉 Onboarding is complete!")
         }
+    }
+}
+
+// MARK: - Extension MainPageViewController for working with mock service
+extension MainPageViewController {
+    private func getSubscriptionService() -> SubscriptionServiceProtocol {
+        return MockSubscriptionService()
+    }
+    
+    @objc func startButtonTapped() {
+        print("🎉 Let's start the process of registering a premium subscription (Mock)")
+        
+        let loadingIndicator = createLoadingIndicator()
+        self.view.addSubview(loadingIndicator)
+        loadingIndicator.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+        }
+        loadingIndicator.startAnimating()
+        
+        Task {
+            do {
+                let subscriptionService = getSubscriptionService()
+                
+                let products = try await subscriptionService.fetchProducts()
+                
+                guard let weeklySubscription = products.first(where: { $0.id == "com.yourapp.premium.weekly" }) else {
+                    throw SubscriptionError.productNotFound
+                }
+                
+                let result = try await subscriptionService.purchase(product: weeklySubscription)
+                
+                DispatchQueue.main.async {
+                    loadingIndicator.removeFromSuperview()
+                    
+                    switch result {
+                    case .success:
+                        self.showSubscriptionSuccessView()
+                        
+                    case .userCancelled:
+                        self.showSubscriptionCancelledMessage()
+                        
+                    case .pending:
+                        self.showSubscriptionPendingMessage()
+                        
+                    case .error(let message):
+                        self.showSubscriptionErrorMessage(message)
+                    }
+                }
+                
+            } catch SubscriptionError.purchaseCancelled {
+                DispatchQueue.main.async {
+                    loadingIndicator.removeFromSuperview()
+                    self.showSubscriptionCancelledMessage()
+                }
+            } catch SubscriptionError.productNotFound {
+                DispatchQueue.main.async {
+                    loadingIndicator.removeFromSuperview()
+                    self.showSubscriptionErrorMessage("Product not found in the App Store.")
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    loadingIndicator.removeFromSuperview()
+                    self.showSubscriptionErrorMessage("Error while subscribing: \(error.localizedDescription)")
+                    print("Error when purchasing: \(error)")
+                }
+            }
+        }
+    }
+    
+    private func showSubscriptionPendingMessage() {
+        let alert = UIAlertController(
+            title: "Confirmation required",
+            message: "Additional confirmation is required to complete the purchase. Please check your notifications or settings.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        self.present(alert, animated: true)
+    }
+    
+    private func createLoadingIndicator() -> UIActivityIndicatorView {
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.color = .gray
+        return indicator
+    }
+    
+    private func showSubscriptionSuccessView() {
+        let successVC = UIViewController()
+        successVC.view.backgroundColor = .white
+        
+        let emojiLabel = UILabel()
+        emojiLabel.text = "🎉"
+        emojiLabel.font = UIFont.systemFont(ofSize: 80)
+        emojiLabel.textAlignment = .center
+        
+        let titleLabel = UILabel()
+        titleLabel.text = "Premium activated!"
+        titleLabel.font = UIFont(name: "SFProDisplay-Bold", size: 24) ?? UIFont.boldSystemFont(ofSize: 24)
+        titleLabel.textAlignment = .center
+        
+        let descriptionLabel = UILabel()
+        descriptionLabel.text = "You have successfully activated your 7-day trial period. Enjoy all the premium features!"
+        descriptionLabel.font = UIFont(name: "SFProDisplay-Regular", size: 16) ?? UIFont.systemFont(ofSize: 16)
+        descriptionLabel.textAlignment = .center
+        descriptionLabel.numberOfLines = 0
+        
+        let continueButton = UIButton(type: .system)
+        continueButton.setTitle("Start using", for: .normal)
+        continueButton.backgroundColor = .black
+        continueButton.setTitleColor(.white, for: .normal)
+        continueButton.titleLabel?.font = UIFont(name: "SFProDisplay-Medium", size: 18) ?? UIFont.systemFont(ofSize: 18, weight: .medium)
+        continueButton.layer.cornerRadius = 24
+        continueButton.addTarget(self, action: #selector(showOnboardingCompletedScreen), for: .touchUpInside)
+        
+        successVC.view.addSubview(emojiLabel)
+        successVC.view.addSubview(titleLabel)
+        successVC.view.addSubview(descriptionLabel)
+        successVC.view.addSubview(continueButton)
+        
+        emojiLabel.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalToSuperview().offset(100)
+        }
+        
+        titleLabel.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalTo(emojiLabel.snp.bottom).offset(24)
+            make.leading.equalToSuperview().offset(40)
+            make.trailing.equalToSuperview().offset(-40)
+        }
+        
+        descriptionLabel.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalTo(titleLabel.snp.bottom).offset(16)
+            make.leading.equalToSuperview().offset(40)
+            make.trailing.equalToSuperview().offset(-40)
+        }
+        
+        continueButton.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.bottom.equalToSuperview().offset(-85)
+            make.leading.equalToSuperview().offset(20)
+            make.trailing.equalToSuperview().offset(-20)
+            make.height.equalTo(56)
+        }
+        
+        self.present(successVC, animated: true)
+    }
+    
+    private func showSubscriptionCancelledMessage() {
+        let alert = UIAlertController(title: "Purchase canceled",
+                                     message: "You have cancelled the subscription process. You can activate premium at any time later.",
+                                     preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        self.present(alert, animated: true)
+    }
+    
+    private func showSubscriptionErrorMessage(_ message: String) {
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        self.present(alert, animated: true)
+    }
+    
+    // MARK: - Additional functions for working with subscriptions
+    func checkSubscriptionStatus() {
+        Task {
+            let subscriptionService = getSubscriptionService()
+            let isActive = await subscriptionService.checkSubscriptionStatus()
+            
+            DispatchQueue.main.async {
+                print("Premium subscription status: \(isActive ? "active" : "inactive")")
+                
+                NotificationCenter.default.post(name: NSNotification.Name("PremiumStatusChanged"),
+                                               object: nil,
+                                               userInfo: ["isActive": isActive])
+            }
+        }
+    }
+    
+    func restorePurchases() {
+        let loadingIndicator = createLoadingIndicator()
+        self.view.addSubview(loadingIndicator)
+        loadingIndicator.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+        }
+        loadingIndicator.startAnimating()
+        
+        Task {
+            do {
+                let subscriptionService = getSubscriptionService()
+                let restored = try await subscriptionService.restorePurchases()
+                
+                DispatchQueue.main.async {
+                    loadingIndicator.removeFromSuperview()
+                    
+                    if restored {
+                        self.showAlert(title: "Successfully", message: "Your subscription has been successfully restored!")
+                        
+                        NotificationCenter.default.post(name: NSNotification.Name("PremiumStatusChanged"),
+                                                       object: nil,
+                                                       userInfo: ["isActive": true])
+                    } else {
+                        self.showAlert(title: "Attention", message: "No active subscriptions found.")
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    loadingIndicator.removeFromSuperview()
+                    self.showAlert(title: "Error", message: "Unable to restore purchases: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        self.present(alert, animated: true)
     }
 }
