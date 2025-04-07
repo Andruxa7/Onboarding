@@ -7,40 +7,40 @@
 
 import Foundation
 
+enum NetworkError: Error {
+    case invalidURL
+    case serverError(Error)
+    case emptyResponse
+    case decodingError(Error)
+}
+
 // MARK: - OnboardingService
 class OnboardingService {
     static let onboardingPath = "\(Environment.baseURL)/onboarding"
-    static func loadOnboardingData(completion: @escaping (OnboardingData?) -> Void) {
-        
+    
+    static func loadOnboardingData() async throws -> OnboardingData {
         guard let url = URL(string: onboardingPath) else {
             print("Error: Invalid URL")
-            completion(nil)
-            return
+            throw NetworkError.invalidURL
         }
-        
-        let task = URLSession.shared.dataTask(with: url) { data, response, error in
-            if let error = error {
-                print("Error loading data: \(error.localizedDescription)")
-                completion(nil)
-                return
-            }
-            
-            guard let data = data else {
-                print("Error: empty response from server")
-                completion(nil)
-                return
-            }
             
             do {
-                let decodedData = try JSONDecoder().decode(OnboardingData.self, from: data)
-                DispatchQueue.main.async {
-                    completion(decodedData)
+                let (data, _) = try await URLSession.shared.data(from: url)
+                
+                guard !data.isEmpty else {
+                    print("Error: empty response from server")
+                    throw NetworkError.emptyResponse
                 }
+                
+                let decodedData = try JSONDecoder().decode(OnboardingData.self, from: data)
+                return decodedData
+                
+            } catch let decodingError as DecodingError {
+                print("Error parsing JSON: \(decodingError)")
+                throw NetworkError.decodingError(decodingError)
             } catch {
-                print("Error parsing JSON: \(error)")
-                completion(nil)
+                print("Error loading data: \(error.localizedDescription)")
+                throw NetworkError.serverError(error)
             }
         }
-        task.resume()
-    }
 }

@@ -76,7 +76,7 @@ class QuestionViewController: UIViewController {
     }
     
     func setupUI() {
-        view.backgroundColor = .systemBackground.withAlphaComponent(0.9)
+        view.backgroundColor = .systemGroupedBackground
         
         view.addSubview(titleLabel)
         view.addSubview(questionLabel)
