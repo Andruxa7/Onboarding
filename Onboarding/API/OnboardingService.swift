@@ -9,10 +9,10 @@ import Foundation
 
 // MARK: - OnboardingService
 class OnboardingService {
+    static let onboardingPath = "\(Environment.baseURL)/onboarding"
     static func loadOnboardingData(completion: @escaping (OnboardingData?) -> Void) {
-        let urlString = "https://test-ios.universeapps.limited/onboarding"
         
-        guard let url = URL(string: urlString) else {
+        guard let url = URL(string: onboardingPath) else {
             print("Error: Invalid URL")
             completion(nil)
             return

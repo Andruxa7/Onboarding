@@ -211,7 +211,7 @@ extension MainPageViewController {
     }
     
     @objc func termsLinksTapped(gesture: UITapGestureRecognizer) {
-        if let url = URL(string: "https://uni.tech") {
+        if let url = URL(string: Environment.privacyURL) {
             UIApplication.shared.open(url)
         }
     }
