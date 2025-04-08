@@ -13,6 +13,7 @@ An onboarding flow built with UIKit based on a Figma design. Content is loaded d
 - ✅ SnapKit
 - ✅ StoreKit 2
 - ✅ Git
+- ✅ Architecture: MVP
 
 ## 🔗 API
 
@@ -35,3 +36,12 @@ GET https://test-ios.universeapps.limited/onboarding
 - No storyboards or xibs
 - No third-party libraries except SnapKit
 - Deployment target: iOS 16.0
+
+## 📸 Demo
+
+<img src="Simulator_1.gif" width="200"/>
+
+<div style="margin-top: 50px;"></div><br><br>
+
+<img src="Simulator_2.gif" width="200"/>
+
