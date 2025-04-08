@@ -43,15 +43,19 @@ class PremiumViewController: UIViewController {
     
     lazy var pricingLabel: UILabel = {
         let label = UILabel()
-        let pricingText = NSMutableAttributedString(string: "then ")
+        let baseAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 16),
+            .foregroundColor: UIColor.darkGray
+        ]
+        let pricingText = NSMutableAttributedString(string: "then ", attributes: baseAttributes)
         let priceAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont(name: "SFProDisplay-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16)
+            .font: UIFont(name: "SFProDisplay-Bold", size: 16) ?? UIFont.boldSystemFont(ofSize: 16),
+            .foregroundColor: UIColor.black
         ]
         pricingText.append(NSAttributedString(string: "$6.99", attributes: priceAttributes))
-        pricingText.append(NSAttributedString(string: " per week, auto-renewable"))
+        pricingText.append(NSAttributedString(string: " per week, auto-renewable", attributes: baseAttributes))
         label.attributedText = pricingText
         label.textAlignment = .left
-        label.textColor = .darkGray
         label.numberOfLines = 0
         return label
     }()
@@ -85,13 +89,21 @@ class PremiumViewController: UIViewController {
             .font: UIFont(name: "SFProDisplay-Regular", size: 12) ?? UIFont.systemFont(ofSize: 12)
         ]
         
+        let commaAttributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: UIColor.darkGray,
+            .font: UIFont(name: "SFProDisplay-Regular", size: 12) ?? UIFont.systemFont(ofSize: 12)
+        ]
+        
         let termsOfUseLink = NSAttributedString(string: "Terms of Use", attributes: linkAttributes)
         termsLinkText.append(termsOfUseLink)
-        termsLinkText.append(NSAttributedString(string: ", "))
+        
+        let comma = NSAttributedString(string: ", ", attributes: commaAttributes)
+        termsLinkText.append(comma)
         
         let privacyPolicyLink = NSAttributedString(string: "Privacy Policy", attributes: linkAttributes)
         termsLinkText.append(privacyPolicyLink)
-        termsLinkText.append(NSAttributedString(string: ", "))
+        
+        termsLinkText.append(NSAttributedString(string: ", ", attributes: commaAttributes))
         
         let subscriptionTermsLink = NSAttributedString(string: "Subscription Terms", attributes: linkAttributes)
         termsLinkText.append(subscriptionTermsLink)
@@ -144,20 +156,20 @@ class PremiumViewController: UIViewController {
         
         titleLabel.snp.makeConstraints { make in
             make.top.equalTo(imageView.snp.bottom).offset(40)
-            make.leading.equalToSuperview().offset(50)
-            make.trailing.equalToSuperview().offset(-50)
+            make.leading.equalToSuperview().offset(24)
+            make.trailing.equalToSuperview().offset(-24)
         }
         
         subtitleLabel.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(24)
-            make.leading.equalToSuperview().offset(50)
-            make.trailing.equalToSuperview().offset(-50)
+            make.top.equalTo(titleLabel.snp.bottom).offset(16)
+            make.leading.equalToSuperview().offset(24)
+            make.trailing.equalToSuperview().offset(-24)
         }
         
         pricingLabel.snp.makeConstraints { make in
-            make.top.equalTo(subtitleLabel.snp.bottom).offset(4)
-            make.leading.equalToSuperview().offset(50)
-            make.trailing.equalToSuperview().offset(-50)
+            make.top.equalTo(subtitleLabel.snp.bottom).offset(2)
+            make.leading.equalToSuperview().offset(24)
+            make.trailing.equalToSuperview().offset(-24)
         }
         
         startButton.snp.makeConstraints { make in
